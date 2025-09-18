@@ -1,0 +1,37 @@
+//@version=6
+strategy("RSI Strategy", overlay=true, default_qty_type=strategy.percent_of_equity, default_qty_value=10)
+
+// RSI Parameters
+rsiLength = input.int(14, "RSI Period", minval=1)
+rsiValue = ta.rsi(close, rsiLength)
+
+// RSI Levels
+rsiUpper = input.int(70, "RSI Upper", minval=0, maxval=100)
+rsiLower = input.int(30, "RSI Lower", minval=0, maxval=100)
+
+// Take Profit and Stop Loss
+takeProfitPct = input.float(5.0, "Take Profit %", minval=0.1)
+stopLossPct = input.float(5.0, "Stop Loss %", minval=0.1)
+
+// Entry Conditions
+longCondition = ta.crossover(rsiValue, rsiLower)
+shortCondition = ta.crossunder(rsiValue, rsiUpper)
+
+// Trading Logic
+if (longCondition)
+    strategy.entry("Long", strategy.long, comment="RSI Long")
+    strategy.exit("Long TP/SL", "Long", 
+        limit=close * (1 + takeProfitPct/100),
+        stop=close * (1 - stopLossPct/100))
+
+if (shortCondition)
+    strategy.entry("Short", strategy.short, comment="RSI Short")
+    strategy.exit("Short TP/SL", "Short", 
+        limit=close * (1 - takeProfitPct/100),
+        stop=close * (1 + stopLossPct/100))
+
+// Plotting
+plot(rsiValue, "RSI", color=color.blue)
+hline(rsiUpper, "Overbought", color=color.red)
+hline(rsiLower, "Oversold", color=color.green)
+hline(50, "Midline", color=color.gray)
