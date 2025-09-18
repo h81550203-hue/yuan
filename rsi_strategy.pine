@@ -1,0 +1,36 @@
+//@version=6
+strategy("RSI Cross Strategy", overlay=true, initial_capital=10000)
+
+// Input parameters
+rsiLength = input(14, "RSI Length")
+rsiOverbought = input(70, "RSI Overbought Level")
+rsiOversold = input(30, "RSI Oversold Level")
+positionSize = input.float(10.0, "Position Size (%)", minval=0.0, maxval=100.0)
+profitTarget = input.float(5.0, "Take Profit (%)", minval=0.0)
+stopLoss = input.float(5.0, "Stop Loss (%)", minval=0.0)
+
+// Calculate RSI
+rsiValue = ta.rsi(close, rsiLength)
+
+// Entry conditions
+longCondition = ta.crossover(rsiValue, rsiOversold)
+shortCondition = ta.crossunder(rsiValue, rsiOverbought)
+
+// Position size calculation
+positionSizeDecimal = positionSize / 100
+profitTargetDecimal = profitTarget / 100
+stopLossDecimal = stopLoss / 100
+
+// Entry signals
+if (shortCondition)
+    strategy.entry("Short", strategy.short, qty=strategy.equity * positionSizeDecimal / close)
+    strategy.exit("Short TP/SL", "Short", profit=profitTargetDecimal * close, loss=stopLossDecimal * close)
+
+if (longCondition)
+    strategy.entry("Long", strategy.long, qty=strategy.equity * positionSizeDecimal / close)
+    strategy.exit("Long TP/SL", "Long", profit=profitTargetDecimal * close, loss=stopLossDecimal * close)
+
+// Plot RSI
+plot(rsiValue, "RSI", color=color.blue)
+hline(rsiOverbought, "Overbought", color=color.red)
+hline(rsiOversold, "Oversold", color=color.green)
